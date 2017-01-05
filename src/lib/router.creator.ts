@@ -102,7 +102,18 @@ export class RouterCreator {
     const middlewares = [];
 
     if (this.isBodyParsed(propertyName, annotations)) {
-      middlewares.push(bodyParser.json());
+      middlewares.push(bodyParser);
+    }
+
+    if (this.isAuthenticationRequired(propertyName, annotations)) {
+      middlewares.push((req: express.Request, res: express.Response, next: express.NextFunction): void => {
+        if (!req.headers['authorization']) {
+          res.status(401).send('Unauthenticated');
+          res.end();
+        } else {
+          next();
+        }
+      });
     }
 
     return middlewares;
@@ -114,6 +125,18 @@ export class RouterCreator {
     }
     for (let i = 0; i < annotations.bodyParsed.length; i++) {
       if (propertyName === annotations.bodyParsed[i].propertyName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private isAuthenticationRequired(propertyName: string | symbol, annotations: RouterDecoratorDefinitions): boolean {
+    if (!annotations || !annotations.authenticated) {
+      return false;
+    }
+    for (let i = 0; i < annotations.authenticated.length; i++) {
+      if (propertyName === annotations.authenticated[i].propertyName) {
         return true;
       }
     }

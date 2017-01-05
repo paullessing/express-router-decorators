@@ -4,6 +4,7 @@ import {
 } from './decorators.interfaces';
 
 const EMPTY_ANNOTATIONS: RouterDecoratorDefinitions = {
+  authenticated: [],
   bodyParsed: [],
   methods: []
 };
@@ -34,6 +35,7 @@ export class RouterRegistry {
     const prototypeAnnotations = this.findAnnotations(constructor.prototype) || EMPTY_ANNOTATIONS;
 
     return {
+      authenticated: [].concat(constructorAnnotations.authenticated, prototypeAnnotations.authenticated),
       bodyParsed: [].concat(constructorAnnotations.bodyParsed, prototypeAnnotations.bodyParsed),
       methods: [].concat(constructorAnnotations.methods, prototypeAnnotations.methods)
     };
@@ -74,6 +76,13 @@ export class RouterRegistry {
     });
   }
 
+  public addAuthenticated(clazz: Clazz, methodOrPropertyName: string | symbol): void {
+    const annotations = this.getOrCreateAnnotations(clazz);
+    annotations.authenticated.push({
+      propertyName: methodOrPropertyName
+    });
+  }
+
   private findAnnotations(clazz: Clazz): RouterDecoratorDefinitions | null {
     for (let i = 0; i < this.annotationsForAllClasses.length; i++) {
       if (this.annotationsForAllClasses[i].clazz === clazz) {
@@ -87,6 +96,7 @@ export class RouterRegistry {
     let annotationsForThisClass = this.findAnnotations(clazz);
     if (!annotationsForThisClass) {
       annotationsForThisClass = {
+        authenticated: [],
         bodyParsed: [],
         methods: []
       };
