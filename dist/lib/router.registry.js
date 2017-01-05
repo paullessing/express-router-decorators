@@ -1,6 +1,7 @@
 "use strict";
 const decorators_interfaces_1 = require("./decorators.interfaces");
 const EMPTY_ANNOTATIONS = {
+    authenticated: [],
     bodyParsed: [],
     methods: []
 };
@@ -18,6 +19,7 @@ class RouterRegistry {
         const constructorAnnotations = this.findAnnotations(constructor) || EMPTY_ANNOTATIONS;
         const prototypeAnnotations = this.findAnnotations(constructor.prototype) || EMPTY_ANNOTATIONS;
         return {
+            authenticated: [].concat(constructorAnnotations.authenticated, prototypeAnnotations.authenticated),
             bodyParsed: [].concat(constructorAnnotations.bodyParsed, prototypeAnnotations.bodyParsed),
             methods: [].concat(constructorAnnotations.methods, prototypeAnnotations.methods)
         };
@@ -54,6 +56,12 @@ class RouterRegistry {
             propertyName: methodOrPropertyName
         });
     }
+    addAuthenticated(clazz, methodOrPropertyName) {
+        const annotations = this.getOrCreateAnnotations(clazz);
+        annotations.authenticated.push({
+            propertyName: methodOrPropertyName
+        });
+    }
     findAnnotations(clazz) {
         for (let i = 0; i < this.annotationsForAllClasses.length; i++) {
             if (this.annotationsForAllClasses[i].clazz === clazz) {
@@ -66,6 +74,7 @@ class RouterRegistry {
         let annotationsForThisClass = this.findAnnotations(clazz);
         if (!annotationsForThisClass) {
             annotationsForThisClass = {
+                authenticated: [],
                 bodyParsed: [],
                 methods: []
             };

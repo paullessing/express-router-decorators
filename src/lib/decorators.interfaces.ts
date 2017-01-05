@@ -6,6 +6,7 @@ export type HttpVerb = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'op
  * Contains all decorator definitions for a router.
  */
 export interface RouterDecoratorDefinitions {
+  authenticated: AuthenticatedDefinition[];
   bodyParsed: BodyParsedDecoratorDefinition[];
   methods: MethodDecoratorDefinition[];
 }
@@ -48,6 +49,13 @@ export interface UseDefinition {
  * Marks a property as requiring a bodyParsed.json() before being called.
  */
 export interface BodyParsedDecoratorDefinition {
+  propertyName: string | symbol;
+}
+
+/**
+ * Marks a property as requiring authentication (?) before being called.
+ */
+export interface AuthenticatedDefinition {
   propertyName: string | symbol;
 }
 
