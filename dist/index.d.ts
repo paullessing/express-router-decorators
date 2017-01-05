@@ -29,6 +29,9 @@ export function Patch(path: PathArgument): MethodDecorator;
 export function Delete(path: PathArgument): MethodDecorator;
 export function Options(path: PathArgument): MethodDecorator;
 
+export function Authenticated(): MethodDecorator & PropertyDecorator;
+export function BodyParsed(): MethodDecorator & PropertyDecorator;
+
 type ResponseBody = string | {};
 
 export interface Response {}
