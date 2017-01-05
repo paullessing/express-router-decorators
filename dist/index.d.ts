@@ -1,5 +1,3 @@
-/// <reference types="express" />
-
 import * as express from 'express';
 
 export type PathArgument = string | RegExp | (string | RegExp)[];
