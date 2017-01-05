@@ -34,7 +34,10 @@ export function BodyParsed(): MethodDecorator & PropertyDecorator;
 
 type ResponseBody = string | {};
 
-export interface Response {}
+export interface Response {
+  responseCode: number;
+  body?: ResponseBody;
+}
 
 export const Response: {
   success(responseCode?: number): Response;
