@@ -7,5 +7,6 @@
     "experimentalDecorators": true,
     "rootDir": "src",
     "outDir": "dist"
-  }
+  },
+  "exclude": ["src/test", "node_modules"]
 }

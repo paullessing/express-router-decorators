@@ -1,0 +1,3 @@
+--reporter spec
+--require test/fixtures.js
+--compilers ts:ts-node/register,ts:ts-node/register
