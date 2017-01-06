@@ -1,9 +1,9 @@
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 
-import {matchClass} from '../util';
-import {RouterRegistry} from '../../lib/router.registry';
-import {Authenticated} from '../../lib/authenticated.decorator';
+import {matchClass} from '../../util';
+import {RouterRegistry} from '../../../lib/router.registry';
+import {Authenticated, authenticate} from '../../../lib/middleware/authenticated.decorator';
 
 describe('@Authenticated decorator', () => {
   let registry: any,
@@ -11,7 +11,7 @@ describe('@Authenticated decorator', () => {
 
   beforeEach(() => {
     registry = {
-      addAuthenticated: sinon.stub()
+      addMiddleware: sinon.stub()
     };
 
     getInstanceStub = sinon.stub(RouterRegistry, 'getInstance');
@@ -28,8 +28,8 @@ describe('@Authenticated decorator', () => {
       }
     }
 
-    expect(registry.addAuthenticated).to.have.been.calledOnce;
-    expect(registry.addAuthenticated).to.have.been.calledWithExactly(matchClass('ClassWithParsedMethods'), 'parsedMethod');
+    expect(registry.addMiddleware).to.have.been.calledOnce;
+    expect(registry.addMiddleware).to.have.been.calledWithExactly(matchClass('ClassWithParsedMethods'), 'parsedMethod', authenticate);
   });
 
   it('should add an entry to the registry when added to a property', () => {
@@ -38,7 +38,7 @@ describe('@Authenticated decorator', () => {
       public parsedProperty: any;
     }
 
-    expect(registry.addAuthenticated).to.have.been.calledOnce;
-    expect(registry.addAuthenticated).to.have.been.calledWithExactly(matchClass('ClassWithParsedProperties'), 'parsedProperty');
+    expect(registry.addMiddleware).to.have.been.calledOnce;
+    expect(registry.addMiddleware).to.have.been.calledWithExactly(matchClass('ClassWithParsedProperties'), 'parsedProperty', authenticate);
   });
 });

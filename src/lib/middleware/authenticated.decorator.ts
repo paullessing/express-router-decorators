@@ -1,5 +1,14 @@
-import {RouterRegistry} from './router.registry';
-import {Clazz} from './decorators.interfaces';
+import * as express from 'express';
+import {Middleware} from '../middleware.decorator';
+
+export const authenticate = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  if (!req.headers['authorization']) {
+    res.status(401).send('Unauthenticated');
+    res.end();
+    return;
+  }
+  next();
+};
 
 /**
  * Method decorator for enforcing that a route needs to have an `authentication` HTTP header.
@@ -13,7 +22,5 @@ import {Clazz} from './decorators.interfaces';
  * </code></pre>
  */
 export function Authenticated(): MethodDecorator & PropertyDecorator {
-  return function(clazz: Clazz, propertyName: string | symbol): void {
-    RouterRegistry.getInstance().addAuthenticated(clazz, propertyName);
-  };
+  return Middleware(authenticate);
 }

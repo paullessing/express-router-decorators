@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 
 import {RouterCreator} from '../../lib/router.creator';
 import {
-  DecoratorDefinitionType, PathArgument, RouterDecoratorDefinitions, UseType,
+  EndpointDefinitionType, PathArgument, RouterDecoratorDefinitions, UseType,
   HttpVerb
 } from '../../lib/decorators.interfaces';
 
@@ -20,9 +20,8 @@ describe('RouterCreator', () => {
 
   beforeEach(() => {
     definitions = {
-      authenticated: [],
-      bodyParsed: [],
-      methods: []
+      middleware: [],
+      endpoints: []
     };
     registry = {
       getDefinitions: sinon.stub().returns(definitions)
@@ -46,8 +45,8 @@ describe('RouterCreator', () => {
   });
 
   function registryContainsMethod(path: PathArgument, httpVerb: HttpVerb, methodName: string = 'method'): void {
-    definitions.methods.push({
-      type: DecoratorDefinitionType.METHOD,
+    definitions.endpoints.push({
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb,
         path,
@@ -57,8 +56,8 @@ describe('RouterCreator', () => {
   }
 
   function registryContainsUse(type: UseType, propertyName: string = 'method', path?: PathArgument): void {
-    definitions.methods.push({
-      type: DecoratorDefinitionType.USE,
+    definitions.endpoints.push({
+      type: EndpointDefinitionType.USE,
       definition: {
         path,
         type,
@@ -68,7 +67,7 @@ describe('RouterCreator', () => {
   }
 
   function registryContainsBodyParsed(propertyName: string): void {
-    definitions.bodyParsed.push({ propertyName });
+    definitions.middleware.push({ propertyName, middleware: sinon.stub() });
   }
 
   it('should create an express Router', () => {
@@ -78,7 +77,7 @@ describe('RouterCreator', () => {
     expect(routerFactory).to.have.been.calledOnce;
   });
 
-  it('should not add any properties to the router if no methods are defined for the class', () => {
+  it('should not add any properties to the router if no endpoints are defined for the class', () => {
     routerCreator.createRouter(new RouterClass());
 
     expect(router.use).not.to.have.been.called;
@@ -98,9 +97,9 @@ describe('RouterCreator', () => {
     routerInstance.doThing = sinon.stub();
 
     registry.getDefinitions = sinon.stub().withArgs(TestRouterClass).returns({
-      bodyParsed: [],
-      methods: [{
-        type: DecoratorDefinitionType.METHOD,
+      middleware: [],
+      endpoints: [{
+        type: EndpointDefinitionType.METHOD,
         definition: {
           httpVerb: 'get',
           path: '/foo',
@@ -263,7 +262,7 @@ describe('RouterCreator', () => {
     expect(getterFunction).to.have.been.calledWithExactly();
   });
 
-  // TODO unit test for ROUTER subtype
-  // TODO unit tests for authenticated
-  // TODO use proper tests with less mocking
+  it.skip('should test the ROUTER subtype'); // TODO
+  it.skip('should test the Authenticated method'); // TODO
+  it.skip('should run an integration test with few mocks'); // TODO
 });
