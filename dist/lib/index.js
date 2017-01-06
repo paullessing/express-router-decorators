@@ -2,7 +2,8 @@
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
-__export(require("./body-parsed.decorator"));
+__export(require("./middleware"));
+__export(require("./middleware.decorator"));
 __export(require("./decorators.interfaces"));
 __export(require("./methods.decorator"));
 __export(require("./use.decorator"));

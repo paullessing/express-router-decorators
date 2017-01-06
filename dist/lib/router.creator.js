@@ -1,5 +1,4 @@
 "use strict";
-const bodyParser = require("body-parser");
 const decorators_interfaces_1 = require("./decorators.interfaces");
 class RouterCreator {
     constructor(expressRouterFactory, routerRegistry, promiseResponse) {
@@ -10,22 +9,22 @@ class RouterCreator {
     createRouter(classInstance) {
         const routerDecoratorDefinitions = this.routerRegistry.getDefinitions(classInstance.constructor);
         const router = this.expressRouterFactory();
-        const methodDecoratorDefinitions = routerDecoratorDefinitions && routerDecoratorDefinitions.methods || [];
-        methodDecoratorDefinitions.forEach((typeDefinition) => {
-            switch (typeDefinition.type) {
-                case decorators_interfaces_1.DecoratorDefinitionType.METHOD:
-                    this.addHttpVerb(classInstance, router, routerDecoratorDefinitions, typeDefinition.definition);
+        const endpointDefinitions = routerDecoratorDefinitions && routerDecoratorDefinitions.endpoints || [];
+        endpointDefinitions.forEach((endpointDefinition) => {
+            switch (endpointDefinition.type) {
+                case decorators_interfaces_1.EndpointDefinitionType.METHOD:
+                    this.addHttpVerbEndpoint(classInstance, router, routerDecoratorDefinitions, endpointDefinition.definition);
                     break;
-                case decorators_interfaces_1.DecoratorDefinitionType.USE:
-                    this.addUse(classInstance, router, routerDecoratorDefinitions, typeDefinition.definition);
+                case decorators_interfaces_1.EndpointDefinitionType.USE:
+                    this.addUseEndpoint(classInstance, router, routerDecoratorDefinitions, endpointDefinition.definition);
                     break;
                 default:
-                    throw new Error('Encountered unexpected definition type ' + typeDefinition.type);
+                    throw new Error('Encountered unexpected definition type ' + endpointDefinition.type);
             }
         });
         return router;
     }
-    addHttpVerb(classInstance, router, annotations, routeDefn) {
+    addHttpVerbEndpoint(classInstance, router, annotations, routeDefn) {
         // We will call router.{get|post|...}() later, by calling apply(router, args).
         // This value builds up the args we will use to call this. See https://expressjs.com/en/guide/routing.html
         let httpVerbMethodArgs = [];
@@ -37,7 +36,7 @@ class RouterCreator {
         httpVerbMethodArgs.push(requestHandler);
         router[routeDefn.httpVerb].apply(router, httpVerbMethodArgs);
     }
-    addUse(classInstance, router, annotations, useDefn) {
+    addUseEndpoint(classInstance, router, annotations, useDefn) {
         // We will call router.use() later, by calling apply(router, args).
         // This value builds up the args we will use to call this. See https://expressjs.com/en/guide/routing.html
         const useArgs = [];
@@ -62,44 +61,9 @@ class RouterCreator {
         router.use.apply(router, useArgs);
     }
     getMiddlewares(propertyName, annotations) {
-        const middlewares = [];
-        if (this.isBodyParsed(propertyName, annotations)) {
-            middlewares.push(bodyParser);
-        }
-        if (this.isAuthenticationRequired(propertyName, annotations)) {
-            middlewares.push((req, res, next) => {
-                if (!req.headers['authorization']) {
-                    res.status(401).send('Unauthenticated');
-                    res.end();
-                }
-                else {
-                    next();
-                }
-            });
-        }
-        return middlewares;
-    }
-    isBodyParsed(propertyName, annotations) {
-        if (!annotations || !annotations.bodyParsed) {
-            return false;
-        }
-        for (let i = 0; i < annotations.bodyParsed.length; i++) {
-            if (propertyName === annotations.bodyParsed[i].propertyName) {
-                return true;
-            }
-        }
-        return false;
-    }
-    isAuthenticationRequired(propertyName, annotations) {
-        if (!annotations || !annotations.authenticated) {
-            return false;
-        }
-        for (let i = 0; i < annotations.authenticated.length; i++) {
-            if (propertyName === annotations.authenticated[i].propertyName) {
-                return true;
-            }
-        }
-        return false;
+        return annotations.middleware
+            .filter((middleware) => middleware.propertyName === propertyName)
+            .map((middleware) => middleware.middleware);
     }
 }
 exports.RouterCreator = RouterCreator;

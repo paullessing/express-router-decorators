@@ -1,9 +1,10 @@
+import * as bodyParser from 'body-parser';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 
-import {matchClass} from '../util';
-import {RouterRegistry} from '../../lib/router.registry';
-import {BodyParsed} from '../../lib/body-parsed.decorator';
+import {matchClass} from '../../util';
+import {RouterRegistry} from '../../../lib/router.registry';
+import {BodyParsed, bodyParserJson} from '../../../lib/middleware/body-parsed.decorator';
 
 describe('@BodyParsed decorator', () => {
   let registry: any,
@@ -11,7 +12,7 @@ describe('@BodyParsed decorator', () => {
 
   beforeEach(() => {
     registry = {
-      addBodyParsed: sinon.stub()
+      addMiddleware: sinon.stub()
     };
 
     getInstanceStub = sinon.stub(RouterRegistry, 'getInstance');
@@ -28,8 +29,8 @@ describe('@BodyParsed decorator', () => {
       }
     }
 
-    expect(registry.addBodyParsed).to.have.been.calledOnce;
-    expect(registry.addBodyParsed).to.have.been.calledWithExactly(matchClass('ClassWithParsedMethods'), 'parsedMethod');
+    expect(registry.addMiddleware).to.have.been.calledOnce;
+    expect(registry.addMiddleware).to.have.been.calledWithExactly(matchClass('ClassWithParsedMethods'), 'parsedMethod', bodyParserJson);
   });
 
   it('should add an entry to the registry when added to a property', () => {
@@ -38,7 +39,7 @@ describe('@BodyParsed decorator', () => {
       public parsedProperty: any;
     }
 
-    expect(registry.addBodyParsed).to.have.been.calledOnce;
-    expect(registry.addBodyParsed).to.have.been.calledWithExactly(matchClass('ClassWithParsedProperties'), 'parsedProperty');
+    expect(registry.addMiddleware).to.have.been.calledOnce;
+    expect(registry.addMiddleware).to.have.been.calledWithExactly(matchClass('ClassWithParsedProperties'), 'parsedProperty', bodyParserJson);
   });
 });

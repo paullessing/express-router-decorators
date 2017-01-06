@@ -29,6 +29,8 @@ export function Patch(path: PathArgument): MethodDecorator;
 export function Delete(path: PathArgument): MethodDecorator;
 export function Options(path: PathArgument): MethodDecorator;
 
+// Middleware
+export function Middleware(middleware: express.RequestHandler): MethodDecorator & PropertyDecorator;
 export function Authenticated(): MethodDecorator & PropertyDecorator;
 export function BodyParsed(): MethodDecorator & PropertyDecorator;
 

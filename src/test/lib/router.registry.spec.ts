@@ -1,7 +1,8 @@
 import {expect} from 'chai';
+import * as sinon from 'sinon';
 
 import {RouterRegistry} from '../../lib/router.registry';
-import {DecoratorDefinitionType, UseType} from '../../lib/decorators.interfaces';
+import {EndpointDefinitionType, UseType} from '../../lib/decorators.interfaces';
 
 describe('RouterRegistry', () => {
   let registry: RouterRegistry;
@@ -16,102 +17,63 @@ describe('RouterRegistry', () => {
     const definitions = registry.getDefinitions(TestClass);
 
     expect(definitions).not.to.be.undefined;
-    expect(definitions.authenticated).to.deep.equal([]);
-    expect(definitions.bodyParsed).to.deep.equal([]);
-    expect(definitions.methods).to.deep.equal([]);
+    expect(definitions.middleware).to.deep.equal([]);
+    expect(definitions.endpoints).to.deep.equal([]);
   });
 
   //=============
-  // @BodyParsed
+  // @Middleware
   //=============
 
-  it('should return bodyParsed definitions when they\'ve been added for a class', () => {
-    registry.addBodyParsed(TestClass, 'parsedMethod');
+  it('should return middleware definitions when they\'ve been added for a method or property', () => {
+    const middleware = sinon.stub();
+    registry.addMiddleware(TestClass, 'parsedMethod', middleware);
 
     const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.bodyParsed).to.deep.equal([
-      { propertyName: 'parsedMethod' }
+    expect(definitions.middleware).to.deep.equal([
+      {
+        propertyName: 'parsedMethod',
+        middleware: middleware
+      }
     ]);
   });
 
-  it('should return multiple bodyParsed definitions in the right order when they\'ve been added for a class', () => {
-    registry.addBodyParsed(TestClass, 'method1');
-    registry.addBodyParsed(TestClass, 'method2');
-    registry.addBodyParsed(TestClass, 'method3');
+  it('should return multiple middleware definitions in the right order when they\'ve been added for methods', () => {
+    const middleware1 = sinon.stub();
+    const middleware2 = sinon.stub();
+    const middleware3 = sinon.stub();
+    registry.addMiddleware(TestClass, 'method1', middleware1);
+    registry.addMiddleware(TestClass, 'method2', middleware2);
+    registry.addMiddleware(TestClass, 'method1', middleware3);
 
     const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.bodyParsed).to.deep.equal([
-      { propertyName: 'method1' },
-      { propertyName: 'method2' },
-      { propertyName: 'method3' }
+    expect(definitions.middleware).to.deep.equal([
+      { propertyName: 'method1', middleware: middleware1 },
+      { propertyName: 'method2', middleware: middleware2 },
+      { propertyName: 'method1', middleware: middleware3 }
     ]);
   });
 
-  it('should return bodyParsed definitions only for the requested class', () => {
+  it('should return middleware definitions only for the requested class', () => {
     class OtherClass {}
 
-    registry.addBodyParsed(OtherClass, 'method');
+    registry.addMiddleware(OtherClass, 'method', sinon.stub());
 
     const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.bodyParsed).to.be.empty;
+    expect(definitions.middleware).to.be.empty;
   });
 
-  it('should return bodyParsed definitions even when they were added for the class prototype (e.g. for static members)', () => {
-    registry.addBodyParsed(TestClass, 'instanceMethod');
-    registry.addBodyParsed(TestClass.prototype, 'staticMethod');
+  it('should return middleware definitions even when they were added for the class prototype (e.g. for static members)', () => {
+    const middleware1 = sinon.stub();
+    const middleware2 = sinon.stub();
+    registry.addMiddleware(TestClass, 'instanceMethod', middleware1);
+    registry.addMiddleware(TestClass.prototype, 'staticMethod', middleware2);
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.bodyParsed).to.deep.equal([
-      { propertyName: 'instanceMethod' },
-      { propertyName: 'staticMethod' }
-    ]);
-  });
-
-  //================
-  // @Authenticated
-  //================
-
-  it('should return authenticated definitions when they\'ve been added for a class', () => {
-    registry.addAuthenticated(TestClass, 'parsedMethod');
-
-    const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.authenticated).to.deep.equal([
-      { propertyName: 'parsedMethod' }
-    ]);
-  });
-
-  it('should return multiple authenticated definitions in the right order when they\'ve been added for a class', () => {
-    registry.addAuthenticated(TestClass, 'method1');
-    registry.addAuthenticated(TestClass, 'method2');
-    registry.addAuthenticated(TestClass, 'method3');
-
-    const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.authenticated).to.deep.equal([
-      { propertyName: 'method1' },
-      { propertyName: 'method2' },
-      { propertyName: 'method3' }
-    ]);
-  });
-
-  it('should return authenticated definitions only for the requested class', () => {
-    class OtherClass {}
-
-    registry.addAuthenticated(OtherClass, 'method');
-
-    const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.authenticated).to.be.empty;
-  });
-
-  it('should return authenticated definitions even when they were added for the class prototype (e.g. for static members)', () => {
-    registry.addAuthenticated(TestClass, 'instanceMethod');
-    registry.addAuthenticated(TestClass.prototype, 'staticMethod');
-
-    const definitions = registry.getDefinitions(TestClass);
-
-    expect(definitions.authenticated).to.deep.equal([
-      { propertyName: 'instanceMethod' },
-      { propertyName: 'staticMethod' }
+    expect(definitions.middleware).to.deep.equal([
+      { propertyName: 'instanceMethod', middleware: middleware1 },
+      { propertyName: 'staticMethod', middleware: middleware2 }
     ]);
   });
 
@@ -125,7 +87,7 @@ describe('RouterRegistry', () => {
     registry.addMethod(OtherClass, 'method', 'get', '/foo');
 
     const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.methods).to.be.empty;
+    expect(definitions.endpoints).to.be.empty;
   });
 
   it('should return method definitions with the correct method name, HTTP verb, and path', () => {
@@ -133,8 +95,8 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.METHOD,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'get',
         path: '/foo',
@@ -148,8 +110,8 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.METHOD,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'post',
         path: ['/foo', '/bar'],
@@ -165,22 +127,22 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.METHOD,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'get',
         path: '/foo',
         methodName: 'getGet'
       }
     }, {
-      type: DecoratorDefinitionType.METHOD,
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'post',
         path: '/bar',
         methodName: 'getPost'
       }
     }, {
-      type: DecoratorDefinitionType.METHOD,
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'delete',
         path: '/del',
@@ -195,15 +157,15 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.METHOD,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'get',
         path: '/foo',
         methodName: 'instanceMethod'
       }
     }, {
-      type: DecoratorDefinitionType.METHOD,
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'post',
         path: '/bar',
@@ -218,15 +180,15 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.METHOD,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'get',
         path: '/get1',
         methodName: 'getMethod'
       }
     }, {
-      type: DecoratorDefinitionType.METHOD,
+      type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb: 'get',
         path: '/get2',
@@ -241,7 +203,7 @@ describe('RouterRegistry', () => {
     registry.addUse(OtherClass, 'method', UseType.MIDDLEWARE_FUNCTION, '/foo');
 
     const definitions = registry.getDefinitions(TestClass);
-    expect(definitions.methods).to.be.empty;
+    expect(definitions.endpoints).to.be.empty;
   });
 
   it('should return use definitions with the correct method name, use type, and path', () => {
@@ -249,8 +211,8 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         type: UseType.MIDDLEWARE_FUNCTION,
         propertyName: 'method',
@@ -264,8 +226,8 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         type: UseType.GETTER,
         propertyName: 'method',
@@ -279,8 +241,8 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         type: UseType.ROUTER,
         propertyName: 'method'
@@ -295,20 +257,20 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         propertyName: 'use1',
         type: UseType.GETTER
       }
     }, {
-      type: DecoratorDefinitionType.USE,
+      type: EndpointDefinitionType.USE,
       definition: {
         propertyName: 'use2',
         type: UseType.ROUTER
       }
     }, {
-      type: DecoratorDefinitionType.USE,
+      type: EndpointDefinitionType.USE,
       definition: {
         propertyName: 'use3',
         type: UseType.MIDDLEWARE_FUNCTION
@@ -322,14 +284,14 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         propertyName: 'instanceMethod',
         type: UseType.GETTER
       }
     }, {
-      type: DecoratorDefinitionType.USE,
+      type: EndpointDefinitionType.USE,
       definition: {
         propertyName: 'staticMethod',
         type: UseType.GETTER
@@ -343,15 +305,15 @@ describe('RouterRegistry', () => {
 
     const definitions = registry.getDefinitions(TestClass);
 
-    expect(definitions.methods).to.deep.equal([{
-      type: DecoratorDefinitionType.USE,
+    expect(definitions.endpoints).to.deep.equal([{
+      type: EndpointDefinitionType.USE,
       definition: {
         type: UseType.GETTER,
         path: '/path1',
         propertyName: 'getMethod'
       }
     }, {
-      type: DecoratorDefinitionType.USE,
+      type: EndpointDefinitionType.USE,
       definition: {
         type: UseType.GETTER,
         path: '/path2',
@@ -364,62 +326,62 @@ describe('RouterRegistry', () => {
   // All Decorators
   //================
 
-  it('should return all kinds of properties in the order they were added, with static methods at the end', () => {
-    registry.addBodyParsed(TestClass.prototype, 'firstMethodStatic');
-    registry.addAuthenticated(TestClass.prototype, 'firstMethodStatic');
+  it('should return all kinds of properties in the order they were added, with static endpoints at the end', () => {
+    const middleware1 = sinon.stub();
+    const middleware2 = sinon.stub();
+    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware1);
+    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware2);
     registry.addMethod(TestClass.prototype, 'firstMethodStatic', 'get', '/getFirst');
-    registry.addBodyParsed(TestClass, 'secondMethod');
-    registry.addAuthenticated(TestClass, 'secondMethod');
+    registry.addMiddleware(TestClass, 'secondMethod', middleware1);
+    registry.addMiddleware(TestClass, 'secondMethod', middleware2);
     registry.addMethod(TestClass, 'secondMethod', 'post', '/postSecond');
     registry.addMethod(TestClass, 'secondMethod', 'get', '/getSecond');
     registry.addMethod(TestClass, 'thirdMethod', 'delete', '/deleteThird');
     registry.addUse(TestClass, 'fourthMethod', UseType.ROUTER, '/fourthRouter');
-    registry.addAuthenticated(TestClass, 'fourthMethod');
-    registry.addBodyParsed(TestClass, 'fourthMethod');
+    registry.addMiddleware(TestClass, 'fourthMethod', middleware2);
+    registry.addMiddleware(TestClass, 'fourthMethod', middleware1);
 
     const definitions = registry.getDefinitions(TestClass);
 
     expect(definitions).to.deep.equal({
-      authenticated: [
-        { propertyName: 'secondMethod' },
-        { propertyName: 'fourthMethod' },
-        { propertyName: 'firstMethodStatic' }
+      middleware: [
+        { propertyName: 'secondMethod', middleware: middleware1 },
+        { propertyName: 'secondMethod', middleware: middleware2 },
+        { propertyName: 'fourthMethod', middleware: middleware2 },
+        { propertyName: 'fourthMethod', middleware: middleware1 },
+        { propertyName: 'firstMethodStatic', middleware: middleware1 },
+        { propertyName: 'firstMethodStatic', middleware: middleware2 }
       ],
-      bodyParsed: [
-        { propertyName: 'secondMethod' },
-        { propertyName: 'fourthMethod' },
-        { propertyName: 'firstMethodStatic' }
-      ],
-      methods: [{
-        type: DecoratorDefinitionType.METHOD,
+      endpoints: [{
+        type: EndpointDefinitionType.METHOD,
         definition: {
           httpVerb: 'post',
           path: '/postSecond',
           methodName: 'secondMethod'
         }
       }, {
-        type: DecoratorDefinitionType.METHOD,
+        type: EndpointDefinitionType.METHOD,
         definition: {
           httpVerb: 'get',
           path: '/getSecond',
           methodName: 'secondMethod'
         }
       }, {
-        type: DecoratorDefinitionType.METHOD,
+        type: EndpointDefinitionType.METHOD,
         definition: {
           httpVerb: 'delete',
           path: '/deleteThird',
           methodName: 'thirdMethod'
         }
       }, {
-        type: DecoratorDefinitionType.USE,
+        type: EndpointDefinitionType.USE,
         definition: {
           type: UseType.ROUTER,
           path: '/fourthRouter',
           propertyName: 'fourthMethod'
         }
       }, {
-        type: DecoratorDefinitionType.METHOD,
+        type: EndpointDefinitionType.METHOD,
         definition: {
           httpVerb: 'get',
           path: '/getFirst',

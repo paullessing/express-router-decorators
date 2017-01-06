@@ -1,12 +1,12 @@
 "use strict";
 /**
- * Determines whether a MethodDecoratorDefinition is a Use or Method definition.
+ * Determines whether a EndpointDefinition is a Use or Method definition.
  */
-var DecoratorDefinitionType;
-(function (DecoratorDefinitionType) {
-    DecoratorDefinitionType[DecoratorDefinitionType["USE"] = 0] = "USE";
-    DecoratorDefinitionType[DecoratorDefinitionType["METHOD"] = 1] = "METHOD";
-})(DecoratorDefinitionType = exports.DecoratorDefinitionType || (exports.DecoratorDefinitionType = {}));
+var EndpointDefinitionType;
+(function (EndpointDefinitionType) {
+    EndpointDefinitionType[EndpointDefinitionType["USE"] = 0] = "USE";
+    EndpointDefinitionType[EndpointDefinitionType["METHOD"] = 1] = "METHOD";
+})(EndpointDefinitionType = exports.EndpointDefinitionType || (exports.EndpointDefinitionType = {}));
 /**
  * Different types of usage for the @Use() decorator.
  */

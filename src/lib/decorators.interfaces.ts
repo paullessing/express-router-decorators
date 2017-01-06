@@ -1,3 +1,5 @@
+import * as express from 'express';
+
 export type PathArgument = string | RegExp | (string | RegExp)[];
 export type Clazz = Function | {};
 export type HttpVerb = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
@@ -6,23 +8,22 @@ export type HttpVerb = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'op
  * Contains all decorator definitions for a router.
  */
 export interface RouterDecoratorDefinitions {
-  authenticated: AuthenticatedDefinition[];
-  bodyParsed: BodyParsedDecoratorDefinition[];
-  methods: MethodDecoratorDefinition[];
+  middleware: MiddlewareDefinition[];
+  endpoints: EndpointDefinition[];
 }
 
 /**
  * Contains the full definition for a http verb or use definition. These are grouped for simplicity.
  */
-export interface MethodDecoratorDefinition {
-  type: DecoratorDefinitionType;
+export interface EndpointDefinition {
+  type: EndpointDefinitionType;
   definition: HttpVerbDefinition | UseDefinition;
 }
 
 /**
- * Determines whether a MethodDecoratorDefinition is a Use or Method definition.
+ * Determines whether a EndpointDefinition is a Use or Method definition.
  */
-export enum DecoratorDefinitionType {
+export enum EndpointDefinitionType {
   USE,
   METHOD
 }
@@ -46,17 +47,11 @@ export interface UseDefinition {
 }
 
 /**
- * Marks a property as requiring a bodyParsed.json() before being called.
+ * Marks a property as a middleware.
  */
-export interface BodyParsedDecoratorDefinition {
+export interface MiddlewareDefinition {
   propertyName: string | symbol;
-}
-
-/**
- * Marks a property as requiring authentication (?) before being called.
- */
-export interface AuthenticatedDefinition {
-  propertyName: string | symbol;
+  middleware: express.RequestHandler;
 }
 
 /**

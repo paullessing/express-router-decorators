@@ -1,9 +1,8 @@
 "use strict";
 const decorators_interfaces_1 = require("./decorators.interfaces");
 const EMPTY_ANNOTATIONS = {
-    authenticated: [],
-    bodyParsed: [],
-    methods: []
+    middleware: [],
+    endpoints: []
 };
 class RouterRegistry {
     constructor() {
@@ -19,9 +18,8 @@ class RouterRegistry {
         const constructorAnnotations = this.findAnnotations(constructor) || EMPTY_ANNOTATIONS;
         const prototypeAnnotations = this.findAnnotations(constructor.prototype) || EMPTY_ANNOTATIONS;
         return {
-            authenticated: [].concat(constructorAnnotations.authenticated, prototypeAnnotations.authenticated),
-            bodyParsed: [].concat(constructorAnnotations.bodyParsed, prototypeAnnotations.bodyParsed),
-            methods: [].concat(constructorAnnotations.methods, prototypeAnnotations.methods)
+            middleware: [].concat(constructorAnnotations.middleware, prototypeAnnotations.middleware),
+            endpoints: [].concat(constructorAnnotations.endpoints, prototypeAnnotations.endpoints)
         };
     }
     addMethod(clazz, methodName, httpVerb, path) {
@@ -31,8 +29,8 @@ class RouterRegistry {
             path,
             methodName
         };
-        annotations.methods.push({
-            type: decorators_interfaces_1.DecoratorDefinitionType.METHOD,
+        annotations.endpoints.push({
+            type: decorators_interfaces_1.EndpointDefinitionType.METHOD,
             definition: methodDefinition
         });
     }
@@ -45,21 +43,16 @@ class RouterRegistry {
         if (path) {
             useDefinition.path = path;
         }
-        annotations.methods.push({
-            type: decorators_interfaces_1.DecoratorDefinitionType.USE,
+        annotations.endpoints.push({
+            type: decorators_interfaces_1.EndpointDefinitionType.USE,
             definition: useDefinition
         });
     }
-    addBodyParsed(clazz, methodOrPropertyName) {
+    addMiddleware(clazz, methodOrPropertyName, middleware) {
         const annotations = this.getOrCreateAnnotations(clazz);
-        annotations.bodyParsed.push({
-            propertyName: methodOrPropertyName
-        });
-    }
-    addAuthenticated(clazz, methodOrPropertyName) {
-        const annotations = this.getOrCreateAnnotations(clazz);
-        annotations.authenticated.push({
-            propertyName: methodOrPropertyName
+        annotations.middleware.push({
+            propertyName: methodOrPropertyName,
+            middleware
         });
     }
     findAnnotations(clazz) {
@@ -74,9 +67,8 @@ class RouterRegistry {
         let annotationsForThisClass = this.findAnnotations(clazz);
         if (!annotationsForThisClass) {
             annotationsForThisClass = {
-                authenticated: [],
-                bodyParsed: [],
-                methods: []
+                middleware: [],
+                endpoints: []
             };
             this.annotationsForAllClasses.push({
                 clazz,

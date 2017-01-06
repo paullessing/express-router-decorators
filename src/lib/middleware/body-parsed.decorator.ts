@@ -1,5 +1,8 @@
-import {RouterRegistry} from './router.registry';
-import {Clazz} from './decorators.interfaces';
+import * as bodyParser from 'body-parser';
+
+import {Middleware} from '../middleware.decorator';
+
+export const bodyParserJson = bodyParser.json();
 
 /**
  * Method decorator for indicating that a route should have its body parsed using bodyParser.json().
@@ -12,7 +15,5 @@ import {Clazz} from './decorators.interfaces';
  * </code></pre>
  */
 export function BodyParsed(): MethodDecorator & PropertyDecorator {
-  return (clazz: Clazz, propertyName: string | symbol): void => {
-    RouterRegistry.getInstance().addBodyParsed(clazz, propertyName);
-  };
+  return Middleware(bodyParserJson);
 }

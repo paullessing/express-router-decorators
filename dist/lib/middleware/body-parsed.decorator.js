@@ -1,5 +1,7 @@
 "use strict";
-const router_registry_1 = require("./router.registry");
+const bodyParser = require("body-parser");
+const middleware_decorator_1 = require("../middleware.decorator");
+exports.bodyParserJson = bodyParser.json();
 /**
  * Method decorator for indicating that a route should have its body parsed using bodyParser.json().
  * Usage:
@@ -11,8 +13,6 @@ const router_registry_1 = require("./router.registry");
  * </code></pre>
  */
 function BodyParsed() {
-    return (clazz, propertyName) => {
-        router_registry_1.RouterRegistry.getInstance().addBodyParsed(clazz, propertyName);
-    };
+    return middleware_decorator_1.Middleware(exports.bodyParserJson);
 }
 exports.BodyParsed = BodyParsed;
