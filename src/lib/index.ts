@@ -1,3 +1,4 @@
+export * from './create-router';
 export * from './middleware';
 export * from './middleware.decorator';
 export * from './decorators.interfaces';

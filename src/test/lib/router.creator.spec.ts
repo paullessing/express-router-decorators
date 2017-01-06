@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import {RouterCreator} from '../../lib/router.creator';
 import {
   EndpointDefinitionType, PathArgument, RouterDecoratorDefinitions, UseType,
-  HttpVerb
+  HttpVerb, EndpointDefinition
 } from '../../lib/decorators.interfaces';
 
 describe('RouterCreator', () => {
@@ -30,7 +30,14 @@ describe('RouterCreator', () => {
     promiseResponse = {
       wrap: sinon.stub().returns(wrappedCall)
     };
-    router = {
+    router = createRouter();
+    routerFactory = sinon.stub().returns(router);
+
+    routerCreator = new RouterCreator(routerFactory, registry, promiseResponse);
+  });
+
+  function createRouter(): any {
+    return {
       use: sinon.stub(),
       get: sinon.stub(),
       post: sinon.stub(),
@@ -39,31 +46,36 @@ describe('RouterCreator', () => {
       'delete': sinon.stub(),
       options: sinon.stub(),
     };
-    routerFactory = sinon.stub().returns(router);
-
-    routerCreator = new RouterCreator(routerFactory, registry, promiseResponse);
-  });
+  }
 
   function registryContainsMethod(path: PathArgument, httpVerb: HttpVerb, methodName: string = 'method'): void {
-    definitions.endpoints.push({
+    definitions.endpoints.push(createMethodDefinition(path, httpVerb, methodName));
+  }
+
+  function createMethodDefinition(path: PathArgument, httpVerb: HttpVerb, methodName: string): EndpointDefinition {
+    return {
       type: EndpointDefinitionType.METHOD,
       definition: {
         httpVerb,
         path,
         methodName
       }
-    });
+    };
   }
 
   function registryContainsUse(type: UseType, propertyName: string = 'method', path?: PathArgument): void {
-    definitions.endpoints.push({
+    definitions.endpoints.push(createUseDefinition(type, propertyName, path));
+  }
+
+  function createUseDefinition(type: UseType, propertyName: string, path: PathArgument): EndpointDefinition {
+    return {
       type: EndpointDefinitionType.USE,
       definition: {
         path,
         type,
         propertyName
       }
-    });
+    };
   }
 
   function registryContainsBodyParsed(propertyName: string): void {
@@ -262,7 +274,36 @@ describe('RouterCreator', () => {
     expect(getterFunction).to.have.been.calledWithExactly();
   });
 
-  it.skip('should test the ROUTER subtype'); // TODO
-  it.skip('should test the Authenticated method'); // TODO
-  it.skip('should run an integration test with few mocks'); // TODO
+  it('should create a subrouter from the property when the UseType is ROUTER', () => {
+    class TestRouterClass {
+      public routerProp: TestSubRouterClass;
+    }
+    class TestSubRouterClass {
+      public routeMethod: any;
+    }
+    const instance = new TestRouterClass();
+    const childInstance = new TestSubRouterClass();
+    instance.routerProp = childInstance;
+
+    const parentRouter = createRouter();
+    const childRouter = createRouter();
+    routerFactory.onFirstCall().returns(parentRouter);
+    routerFactory.onSecondCall().returns(childRouter);
+
+    registry.getDefinitions = sinon.stub();
+    registry.getDefinitions.withArgs(TestRouterClass).returns({
+      middleware: [],
+      endpoints: [createUseDefinition(UseType.ROUTER, 'routerProp', '/foo')]
+    });
+    registry.getDefinitions.withArgs(TestSubRouterClass).returns({
+      middleware: [],
+      endpoints: [createMethodDefinition('/bar', 'get', 'routeMethod')]
+    });
+
+    const result = routerCreator.createRouter(instance);
+
+    expect(result).to.equal(parentRouter);
+    expect(childRouter.get).to.have.been.calledWith('/bar');
+    expect(parentRouter.use).to.have.been.calledWithExactly('/foo', childRouter);
+  });
 });
