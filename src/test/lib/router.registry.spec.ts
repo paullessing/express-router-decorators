@@ -42,9 +42,10 @@ describe('RouterRegistry', () => {
     const middleware1 = sinon.stub();
     const middleware2 = sinon.stub();
     const middleware3 = sinon.stub();
-    registry.addMiddleware(TestClass, 'method1', middleware1);
-    registry.addMiddleware(TestClass, 'method2', middleware2);
+    // The system will process decorators in reverse order of source declaration
     registry.addMiddleware(TestClass, 'method1', middleware3);
+    registry.addMiddleware(TestClass, 'method2', middleware2);
+    registry.addMiddleware(TestClass, 'method1', middleware1);
 
     const definitions = registry.getDefinitions(TestClass);
     expect(definitions.middleware).to.deep.equal([
@@ -121,9 +122,10 @@ describe('RouterRegistry', () => {
   });
 
   it('should return multiple method definitions in the right order', () => {
-    registry.addMethod(TestClass, 'getGet', 'get', '/foo');
-    registry.addMethod(TestClass, 'getPost', 'post', '/bar');
+    // System processes decorators in reverse order of source declaration
     registry.addMethod(TestClass, 'getDelete', 'delete', '/del');
+    registry.addMethod(TestClass, 'getPost', 'post', '/bar');
+    registry.addMethod(TestClass, 'getGet', 'get', '/foo');
 
     const definitions = registry.getDefinitions(TestClass);
 
@@ -175,8 +177,8 @@ describe('RouterRegistry', () => {
   });
 
   it('should return method definitions even when they refer to the same method', () => {
-    registry.addMethod(TestClass, 'getMethod', 'get', '/get1');
     registry.addMethod(TestClass, 'getMethod', 'get', '/get2');
+    registry.addMethod(TestClass, 'getMethod', 'get', '/get1');
 
     const definitions = registry.getDefinitions(TestClass);
 
@@ -251,9 +253,10 @@ describe('RouterRegistry', () => {
   });
 
   it('should return multiple use definitions in the right order', () => {
-    registry.addUse(TestClass, 'use1', UseType.GETTER);
-    registry.addUse(TestClass, 'use2', UseType.ROUTER);
+    // The system will process decorators in reverse order of source declaration
     registry.addUse(TestClass, 'use3', UseType.MIDDLEWARE_FUNCTION);
+    registry.addUse(TestClass, 'use2', UseType.ROUTER);
+    registry.addUse(TestClass, 'use1', UseType.GETTER);
 
     const definitions = registry.getDefinitions(TestClass);
 
@@ -300,8 +303,9 @@ describe('RouterRegistry', () => {
   });
 
   it('should return use definitions even when they refer to the same method', () => {
-    registry.addUse(TestClass, 'getMethod', UseType.GETTER, '/path1');
+    // The system will process decorators in reverse order of source declaration
     registry.addUse(TestClass, 'getMethod', UseType.GETTER, '/path2');
+    registry.addUse(TestClass, 'getMethod', UseType.GETTER, '/path1');
 
     const definitions = registry.getDefinitions(TestClass);
 
@@ -326,20 +330,20 @@ describe('RouterRegistry', () => {
   // All Decorators
   //================
 
-  it('should return all kinds of properties in the order they were added, with static endpoints at the end', () => {
+  it('should return all kinds of properties in the reverse order they were added, with static endpoints at the end', () => {
     const middleware1 = sinon.stub();
     const middleware2 = sinon.stub();
-    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware1);
-    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware2);
-    registry.addMethod(TestClass.prototype, 'firstMethodStatic', 'get', '/getFirst');
-    registry.addMiddleware(TestClass, 'secondMethod', middleware1);
-    registry.addMiddleware(TestClass, 'secondMethod', middleware2);
-    registry.addMethod(TestClass, 'secondMethod', 'post', '/postSecond');
-    registry.addMethod(TestClass, 'secondMethod', 'get', '/getSecond');
-    registry.addMethod(TestClass, 'thirdMethod', 'delete', '/deleteThird');
-    registry.addUse(TestClass, 'fourthMethod', UseType.ROUTER, '/fourthRouter');
-    registry.addMiddleware(TestClass, 'fourthMethod', middleware2);
     registry.addMiddleware(TestClass, 'fourthMethod', middleware1);
+    registry.addMiddleware(TestClass, 'fourthMethod', middleware2);
+    registry.addUse(TestClass, 'fourthMethod', UseType.ROUTER, '/fourthRouter');
+    registry.addMethod(TestClass, 'thirdMethod', 'delete', '/deleteThird');
+    registry.addMethod(TestClass, 'secondMethod', 'get', '/getSecond');
+    registry.addMethod(TestClass, 'secondMethod', 'post', '/postSecond');
+    registry.addMiddleware(TestClass, 'secondMethod', middleware2);
+    registry.addMiddleware(TestClass, 'secondMethod', middleware1);
+    registry.addMethod(TestClass.prototype, 'firstMethodStatic', 'get', '/getFirst');
+    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware2);
+    registry.addMiddleware(TestClass.prototype, 'firstMethodStatic', middleware1);
 
     const definitions = registry.getDefinitions(TestClass);
 
