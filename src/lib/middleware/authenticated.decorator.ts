@@ -1,4 +1,5 @@
 import * as express from 'express';
+
 import {Middleware} from '../middleware.decorator';
 
 export const authenticate = (req: express.Request, res: express.Response, next: express.NextFunction): void => {

@@ -5,47 +5,47 @@ import {Get, Post, Put, Patch, Options, Delete, BodyParsed, Middleware, createRo
 
 class TestRouter {
   @Get('/profile')
-  public getProfile(req: express.Request, res: express.Response, next: express.NextFunction): Promise<Response> {
+  public getProfile(): Promise<Response> {
     return Response.resolve({
       username: 'user'
     });
   }
 
   @Post('/profile')
-  public postProfile(req: express.Request, res: express.Response, next: express.NextFunction): Promise<Response> {
+  public postProfile(): Promise<Response> {
     return Response.resolve({
       username: 'newUser'
     });
   }
 
   @Put('/profile')
-  public putProfile(req: express.Request, res: express.Response, next: express.NextFunction): Promise<Response> {
+  public putProfile(): Promise<Response> {
     return Response.resolve({
       username: 'putUser'
     });
   }
 
   @Patch('/profile')
-  public patchProfile(req: express.Request, res: express.Response, next: express.NextFunction): Promise<Response> {
+  public patchProfile(): Promise<Response> {
     return Response.resolve({
       username: 'patchedUser'
     });
   }
 
   @Delete('/profile')
-  public deleteProfile(req: express.Request, res: express.Response, next: express.NextFunction): Promise<Response> {
+  public deleteProfile(): Promise<Response> {
     return Response.resolve(204);
   }
 
   @Options('/profile')
-  public optionsProfile(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  public optionsProfile(req: express.Request, res: express.Response): void {
     res.status(200);
     res.header('Allow', 'Anything');
     res.end();
   }
 
   @Get('/profile/head')
-  public headProfile(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  public headProfile(req: express.Request, res: express.Response): void {
     res.status(200);
     res.header('X-Result', 'Success');
     res.send('foo');
@@ -53,7 +53,7 @@ class TestRouter {
   }
 
   @Get('/profile-by-id/:profileId')
-  public getProfilyById(req: express.Request, res: express.Response): Promise<Response> {
+  public getProfilyById(req: express.Request): Promise<Response> {
     const profileId = req.params['profileId'];
     const param = req.query['extraParam'] || 'default-param';
     return Response.resolve({
@@ -72,15 +72,15 @@ class TestRouter {
   }
 
   @Post('/error-500')
-  public error500(req: express.Request, res: express.Response): Promise<Response> {
+  public error500(): Promise<Response> {
     return Response.reject(500);
   }
 
-  @Middleware(function m1(req: express.Request, res: express.Response, next: express.NextFunction) {
+  @Middleware((req: express.Request, res: express.Response, next: express.NextFunction) => {
     (req as any).middlewareRun = 'firstMiddleware';
     next();
   })
-  @Middleware(function m2(req: express.Request, res: express.Response, next: express.NextFunction) {
+  @Middleware((req: express.Request, res: express.Response, next: express.NextFunction) => {
     (req as any).middlewareRun += ' secondMiddleware';
     next();
   })
