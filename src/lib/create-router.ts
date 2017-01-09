@@ -14,7 +14,7 @@ export function createRouter(classInstance: any, options?: {
   }
 
   const creator = new RouterCreator(
-    () => express.Router(),
+    (): express.Router => express.Router(),
     RouterRegistry.getInstance(),
     promiseResponseWrapper
   );
