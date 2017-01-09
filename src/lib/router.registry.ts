@@ -48,7 +48,7 @@ export class RouterRegistry {
       path,
       methodName
     };
-    annotations.endpoints.push({
+    annotations.endpoints.unshift({
       type: EndpointDefinitionType.METHOD,
       definition: methodDefinition
     });
@@ -63,7 +63,7 @@ export class RouterRegistry {
     if (path) {
       useDefinition.path = path;
     }
-    annotations.endpoints.push({
+    annotations.endpoints.unshift({
       type: EndpointDefinitionType.USE,
       definition: useDefinition
     });
@@ -71,7 +71,7 @@ export class RouterRegistry {
 
   public addMiddleware(clazz: Clazz, methodOrPropertyName: string | symbol, middleware: express.RequestHandler): void {
     const annotations = this.getOrCreateAnnotations(clazz);
-    annotations.middleware.push({
+    annotations.middleware.unshift({
       propertyName: methodOrPropertyName,
       middleware
     });
