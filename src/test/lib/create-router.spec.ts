@@ -2,6 +2,8 @@ import * as express from 'express';
 import * as request from 'supertest-as-promised';
 
 import {Get, Post, Put, Patch, Options, Delete, BodyParsed, Middleware, createRouter, Response} from '../../lib';
+import {UseType} from '../../lib/decorators.interfaces';
+import {Use} from '../../lib/use.decorator';
 
 class TestRouter {
   @Get('/profile')
@@ -93,9 +95,34 @@ class TestRouter {
   @Get('/duplicate-endpoint-2')
   @Get(['/duplicate-endpoint-3', '/duplicate-endpoint-4'])
   @Post('/duplicate-endpoint-5')
-  public duplicateEndpoint(req: express.Request, res: express.Response): Promise<Response> {
+  public duplicateEndpoint(): Promise<Response> {
     return Response.resolve('yes');
   }
+
+  @Use('/status', UseType.MIDDLEWARE_FUNCTION)
+  public addStatusHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    res.header('X-Status', 'UP');
+    next();
+  }
+
+  @Use('/status', UseType.GETTER)
+  public getStatus(): express.RequestHandler {
+    return (req: express.Request, res: express.Response): void => {
+      res.send('UP').end();
+    }
+  }
+
+  @Use('/status', UseType.MIDDLEWARE_FUNCTION)
+  public addStatusHeadersUnexpected(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    res.status(418).end();
+  }
+
+  @Use('/details', UseType.ROUTER)
+  public childRouter: ChildRouter = new ChildRouter();
+}
+
+class ChildRouter {
+
 }
 
 describe('createRouter()', () => {
@@ -229,4 +256,27 @@ describe('createRouter()', () => {
       server.post('/duplicate-endpoint-5').expect(200).expect('yes')
     ]);
   });
+
+  it('should bind the result of the getter for UseType.GETTER to @Use definitions', () => {
+    return request(app)
+      .get('/status')
+      .expect(200)
+      .expect('UP');
+  });
+
+  it('should bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions', () => {
+    return request(app)
+      .get('/status')
+      .expect(200)
+      .expect('X-Status', 'UP');
+  });
+
+  it('should not bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions where the method is after the endpoint', () => {
+    return request(app)
+      .get('/status')
+      .expect(200);
+  });
+
+  // TODO when having multiple functions, they should be done in source order; but when you get multiple decorators
+  // on a single function, they should be reversed (because they will evaluate the other way round).
 });
