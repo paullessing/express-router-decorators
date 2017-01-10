@@ -257,21 +257,21 @@ describe('createRouter()', () => {
     ]);
   });
 
-  it('should bind the result of the getter for UseType.GETTER to @Use definitions', () => {
+  it.skip('should bind the result of the getter for UseType.GETTER to @Use definitions', () => {
     return request(app)
       .get('/status')
       .expect(200)
       .expect('UP');
   });
 
-  it('should bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions', () => {
+  it.skip('should bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions', () => {
     return request(app)
       .get('/status')
       .expect(200)
       .expect('X-Status', 'UP');
   });
 
-  it('should not bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions where the method is after the endpoint', () => {
+  it.skip('should not bind the function as a middleware for UseType.MIDDLEWARE_FUNCTION on @Use definitions where the method is after the endpoint', () => {
     return request(app)
       .get('/status')
       .expect(200);
