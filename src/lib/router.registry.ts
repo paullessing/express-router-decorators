@@ -33,7 +33,6 @@ export class RouterRegistry {
 
   public getDefinitions(constructor: Function): RouterDecoratorDefinitions {
     const constructorAnnotations = this.findAnnotations(constructor) || EMPTY_ANNOTATIONS;
-    const prototypeAnnotations = this.findAnnotations(constructor.prototype) || EMPTY_ANNOTATIONS;
 
     return {
       middleware: [].concat(constructorAnnotations.middleware, prototypeAnnotations.middleware),
@@ -78,6 +77,7 @@ export class RouterRegistry {
   }
 
   private findAnnotations(clazz: Clazz): RouterDecoratorDefinitions | null {
+    const prototype: {} = typeof clazz === 'function' ? (clazz as Function).prototype : clazz;
     for (let i = 0; i < this.annotationsForAllClasses.length; i++) {
       if (this.annotationsForAllClasses[i].clazz === clazz) {
         return this.annotationsForAllClasses[i].annotations;

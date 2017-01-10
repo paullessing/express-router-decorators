@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import {RouterRegistry} from '../../lib/router.registry';
 import {EndpointDefinitionType, UseType} from '../../lib/decorators.interfaces';
 
-describe('RouterRegistry', () => {
+describe.only('RouterRegistry', () => {
   let registry: RouterRegistry;
 
   class TestClass {} // We don't need actual properties on this class as all the properties are resolved by name
@@ -324,6 +324,50 @@ describe('RouterRegistry', () => {
         propertyName: 'getMethod'
       }
     }]);
+  });
+
+  //================
+  // TODO name
+  //================
+  it('should return endpoints in order of declaration', () => {
+    // Order of declaration means the order in which they appear in the markup
+    const middleware1 = function middleware1() {};
+    const middleware2 = function middleware2() {};
+    const middleware3 = function middleware3() {};
+    const middleware4 = function middleware4() {};
+    registry.addUse(TestClass, 'middlewareFunction', UseType.MIDDLEWARE_FUNCTION, '/endpoint');
+    registry.addMiddleware(TestClass, 'middlewareFunction', middleware2);
+    registry.addMiddleware(TestClass, 'middlewareFunction', middleware1);
+
+    registry.addMethod(TestClass, 'endpointFunction', 'get', '/endpoint');
+    registry.addMiddleware(TestClass, 'endpointFunction', middleware4);
+    registry.addMiddleware(TestClass, 'endpointFunction', middleware3);
+
+    const definitions = registry.getDefinitions(TestClass);
+
+    expect(definitions).to.deep.equal({
+      middleware: [
+        { propertyName: 'middlewareFunction', middleware: middleware1 },
+        { propertyName: 'middlewareFunction', middleware: middleware2 },
+        { propertyName: 'endpointFunction', middleware: middleware3 },
+        { propertyName: 'endpointFunction', middleware: middleware4 }
+      ],
+      endpoints: [{
+        type: EndpointDefinitionType.USE,
+        definition: {
+          type: UseType.MIDDLEWARE_FUNCTION,
+          path: '/endpoint',
+          propertyName: 'middlewareFunction'
+        }
+      }, {
+        type: EndpointDefinitionType.METHOD,
+        definition: {
+          httpVerb: 'get',
+          path: '/endpoint',
+          methodName: 'endpointFunction'
+        }
+      }]
+    });
   });
 
   //================
