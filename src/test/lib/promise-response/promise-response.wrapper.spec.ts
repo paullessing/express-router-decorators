@@ -139,7 +139,7 @@ describe('PromiseResponseWrapper', () => {
     const errorObject = {
       message: 'You are not logged in'
     };
-    handler.returns(Response.reject(errorObject, 401));
+    handler.returns(Response.reject(401, errorObject));
 
     middleware(req, res, next);
 
@@ -152,7 +152,7 @@ describe('PromiseResponseWrapper', () => {
 
   it('should send the response content as a string when the handler returns a failed Response promise with a string', () => {
     const response = 'response message';
-    handler.returns(Response.reject(response, 400));
+    handler.returns(Response.reject(400, response));
 
     middleware(req, res, next);
 

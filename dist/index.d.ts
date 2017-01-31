@@ -42,15 +42,19 @@ export interface Response {
 }
 
 export const Response: {
+  success(body?: ResponseBody): Response;
   success(responseCode?: number): Response;
-  success(body?: ResponseBody, responseCode?: number): Response;
+  success(responseCode?: number, body?: ResponseBody): Response;
 
+  error(error?: ResponseBody): Response;
   error(responseCode?: number): Response;
-  error(error?: ResponseBody, responseCode?: number): Response;
+  error(responseCode?: number, error?: ResponseBody): Response;
 
+  resolve(body?: ResponseBody): Promise<Response>;
   resolve(responseCode?: number): Promise<Response>;
-  resolve(body?: ResponseBody, responseCode?: number): Promise<Response>;
+  resolve(responseCode?: number, body?: ResponseBody): Promise<Response>;
 
-  reject<T>(responseCode?: number): Promise<T>;
-  reject<T>(error?: ResponseBody, responseCode?: number): Promise<T>;
+  reject(error?: ResponseBody): Promise<Response>;
+  reject(responseCode?: number): Promise<Response>;
+  reject(responseCode?: number, error?: ResponseBody): Promise<Response>;
 };

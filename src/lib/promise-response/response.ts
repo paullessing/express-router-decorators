@@ -6,27 +6,35 @@ export class Response {
     public body?: ResponseBody
   ) {}
 
-  public static error(error?: ResponseBody | number, responseCode?: number): Response {
-    if (typeof responseCode === 'undefined' && typeof error === 'number') {
-      responseCode = error as number;
-      error = undefined;
+  public static error(errorOrCode?: ResponseBody | number, responseError?: ResponseBody): Response {
+    let error: ResponseBody;
+    let responseCode: number;
+    if (typeof errorOrCode === 'number') {
+      responseCode = errorOrCode as number;
+      error = responseError;
+    } else {
+      error = errorOrCode;
     }
     return new Response(responseCode || 500, error);
   }
 
-  public static success(body?: ResponseBody, responseCode?: number): Response {
-    if (typeof responseCode === 'undefined' && typeof body === 'number') {
-      responseCode = body as number;
-      body = undefined;
+  public static success(bodyOrCode?: ResponseBody | number, responseBody?: ResponseBody): Response {
+    let body: ResponseBody;
+    let responseCode: number;
+    if (typeof bodyOrCode === 'number') {
+      responseCode = bodyOrCode as number;
+      body = responseBody;
+    } else {
+      body = bodyOrCode;
     }
     return new Response(responseCode || 200, body);
   }
 
-  public static reject<T>(error?: ResponseBody | number, responseCode?: number): Promise<T> {
-    return Promise.reject<T>(Response.error(error, responseCode));
+  public static reject<T>(errorOrCode?: ResponseBody | number, responseError?: ResponseBody): Promise<T> {
+    return Promise.reject<T>(Response.error(errorOrCode, responseError));
   }
 
-  public static resolve(body?: ResponseBody, responseCode?: number): Promise<Response> {
-    return Promise.resolve(Response.success(body, responseCode));
+  public static resolve(bodyOrCode?: ResponseBody | number, responseBody?: ResponseBody): Promise<Response> {
+    return Promise.resolve(Response.success(bodyOrCode, responseBody));
   }
 }
